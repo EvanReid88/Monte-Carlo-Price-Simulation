@@ -6,6 +6,8 @@ import datetime
 from scipy.stats import norm
 from pandas_datareader import data
 
+bodyString = '----------------------------------------------------------------'
+
 #get variables from user
 symbol = input('What is the symbol?: ')
 symbol.upper()
@@ -14,8 +16,7 @@ startDate = input('What is the start date for price history data? (MM/DD/YYY): '
 endDate = input('What is the end date for price history data? (type none for most recent date) (MM/DD/YYY): ')
 yearLaterPrice = None
 
-#TODO if end date is over a year old, then grab price from the year after and compare to results
-
+#if end date is over a year old, then grab price from the year after and compare to results
 if str(endDate).upper() == 'NONE':
     endDate = datetime.datetime.now()
 else: 
@@ -31,14 +32,10 @@ else:
 simNum = input('How many simulations would you like to run? (<10,000): ')
 simNum = int(simNum)
 
-print ('--------------------------------------------')
+print (bodyString)
 
 #download stock price data into DataFrame
 stock = data.DataReader(symbol, 'yahoo',start=startDate, end=endDate)
-
-#TODO print current price information
-#TODO compare predicions of previous year to actual
-#TODO add user option to select number of days predicted, datareader date range, stock symbol, number of simulations
 
 #Define Variables
 S = stock['Adj Close'][-1] #starting stock price (i.e. last available real stock price)
@@ -48,7 +45,7 @@ T = 252 #Number of trading days
 #will give us our mean return input (mu) 
 days = (stock.index[-1] - stock.index[0]).days
 cagr = ((((stock['Adj Close'][-1]) / stock['Adj Close'][1])) ** (365.0/days)) - 1
-print ('CAGR =', str(round(cagr,4)*100)+"%")
+print ('CAGR =', str(round(cagr*100,4))+"%")
 mu = cagr
  
 #create a series of percentage returns and calculate 
@@ -56,6 +53,9 @@ mu = cagr
 stock['Returns'] = stock['Adj Close'].pct_change()
 vol = stock['Returns'].std()*np.sqrt(252)
 print ("Annual Volatility =", str(round(vol*100, 4))+"%")
+
+#print last real price
+print('Last price on ', endDate.strftime("%m/%d/%Y"), ': ', round(S, 4))
 
 #set up empty list to hold our ending values for each simulated price series
 result = []
@@ -88,29 +88,25 @@ plt.axvline(np.percentile(result,15), color='b', linestyle='dashed', linewidth=2
 plt.axvline(np.percentile(result,75), color='b', linestyle='dashed', linewidth=2)
 plt.show()
 
-#print last real price
-print('Last price on ', endDate.strftime("%m/%d/%Y"), ': ', round(S, 4))
+print (bodyString)
 
 #use numpy mean function to calculate the mean of the result
+print("Simulation Results: \n")
 print("Mean: ", round(np.mean(result), 4))
-print("Mean Growth: %", round(((np.mean(result) - S)/S)*100, 4))
-
-print ('--------------------------------------------')
+print("Mean Growth: %", round(((np.mean(result) - S)/S)*100, 4), '\n')
 
 print("5% quantile =", round(np.percentile(result,5), 4))
 print("25% quantile =", round(np.percentile(result,25), 4))
 print("75% quantile =", round(np.percentile(result,75), 4))
 print("95% quantile =", round(np.percentile(result,95), 4))
 
-print ('--------------------------------------------')
+print (bodyString)
 
 # if end date for price history is over a year from last trading day
-# add more data values that can be grabbed from given data
-
-#TODO add percentage increase from end date and mean, change all parentheses to singl, add actual growth, dfifernciate he mean from he cagr and say what its frome
 if yearLaterPrice != None:
     print('Actual price a year later from ', endDate.strftime("%m/%d/%Y"), round(yearLaterPrice, 4))
+    print('Actual growth a year later from ', endDate.strftime("%m/%d/%Y"), ' %', round(((yearLaterPrice - S)/S)*100, 4))
     print('Variance between actual price and mean result: ', round((yearLaterPrice - np.mean(result)), 4))
     print('% Variance between actual and mean result: %', round(((yearLaterPrice - np.mean(result))/np.mean(result))*100, 4))
-    print ('--------------------------------------------')
+    print (bodyString)
 #print(result)
